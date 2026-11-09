@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>鍵盤學習 - 字母發音與位置</title>
+<style>
+  :root {
+    --bg: #f0f4f8;
+    --card: #ffffff;
+    --left: #a7c7e7;
+    --right: #f5b7b1;
+    --thumb: #a9dfbf;
+    --active: #2c3e50;
+    --text: #2c3e50;
+    --muted: #7f8c8d;
+    --key-bg: #ecf0f1;
+    --key-shadow: #bdc3c7;
+    --accent: #3498db;
+    --correct: #27ae60;
+    --wrong: #e74c3c;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  .container { max-width: 1700px; margin: 0 auto; padding: 8px 8px 24px; }
+
+  header {
+    text-align: center;
+    padding: 4px 0 6px;
+  }
+  header h1 { margin: 0; font-size: 30px; color: var(--active); }
+
+  /* 練習設定區 - 全部排成一列，高度極緊湊 */
+  .settings-card {
+    background: var(--card);
+    border-radius: 6px;
+    padding: 2px 6px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    margin-bottom: 4px;
+  }
+  .settings-card h3 {
+    margin: 0 0 2px;
+    font-size: 18px;
+    color: var(--active);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  /* 所有設定與控制項目排成一列，不換行 */
+  .settings-flex {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: nowrap;
+    justify-content: center;
+  }
+
+  .setting-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+  .setting-group label {
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .mode-btn {
+    padding: 1px 6px;
+    font-size: 12px;
+    font-weight: 700;
+    border: 1.5px solid #dfe6e9;
+    border-radius: 5px;
+    background: #fff;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: inherit;
+  }
+  .mode-btn.active {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 1px 3px rgba(52,152,219,0.35);
+  }
+  .mode-btn:hover:not(.active) { border-color: var(--muted); color: var(--active); }
+
+  select, input[type="text"] {
+    padding: 1px 4px;
+    font-size: 12px;
+    border: 1.5px solid #dfe6e9;
+    border-radius: 5px;
+    background: #fff;
+    color: var(--text);
+    font-family: inherit;
+  }
+  select:focus, input[type="text"]:focus { outline: none; border-color: var(--accent); }
+  input[type="text"] { width: 28px; text-align: center; text-transform: uppercase; }
+  .range-hint { display:none; font-size: 12px; color: var(--muted); margin-top: 1px; }
+
+  /* 練習模式按鈕：再加大字體 */
+  #pai-explore,
+  #pai-challenge {
+    font-size: 16px;
+    padding: 2px 12px;
+  }
+
+  /* 字母大小寫按鈕：放大 */
+  .case-group .mode-btn {
+    font-size: 15px;
+    padding: 2px 14px;
+  }
+
+  /* 大字顯示區（底白區） */
+  .display-card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 6px 15px 10px;
+    text-align: center;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.07);
+    margin-bottom: 12px;
+    border: 4px solid transparent;
+  }
+  .display-card.flash-correct { border-color: var(--correct); animation: popIn 0.3s ease; }
+  .display-card.flash-wrong   { border-color: var(--wrong); animation: shake 0.3s ease; }
+
+  @keyframes popIn {
+    0% { transform: scale(0.96); }
+    60% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+  }
+
+  #big-letter {
+    font-size: 120px;
+    font-weight: 900;
+    line-height: 1;
+    color: var(--active);
+    margin: -8px 0 0;
+  }
+  #feedback-message {
+    font-size: 18px;
+    font-weight: 800;
+    margin: 8px 0 4px;
+    min-height: 24px;
+  }
+  #feedback-message.ok  { color: var(--correct); }
+  #feedback-message.bad { color: var(--wrong); }
+  #feedback-message.neutral { color: var(--muted); }
+
+  #finger-info {
+    font-size: 15px;
+    font-weight: 700;
+    margin: 6px 0 4px;
+    color: var(--muted);
+    min-height: 18px;
+  }
+  #key-hint { font-size: 13px; color: var(--muted); }
+
+  #score-board {
+    display: flex;
+    gap: 28px;
+    justify-content: center;
+    margin-top: 16px;
+    font-size: 20px;
+    font-weight: 700;
+  }
+  #score-board .sc { min-width: 80px; }
+  #score-board .ok  { color: var(--correct); }
+  #score-board .bad { color: var(--wrong); }
+  #score-board .fire{ color: #e67e22; }
+
+  #voice-status {
+    font-size: 14px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 8px;
+    min-height: 20px;
+  }
+
+  /* 鍵盤區 - 置中 */
+  .keyboard {
+    background: var(--card);
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.09);
+    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .keyboard h2 { margin: 0 0 10px; font-size: 18px; color: var(--muted); text-align: center; }
+
+  .keyboard-case-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 14px;
+    flex-wrap: nowrap;
+  }
+  .keyboard-case-row .case-btn {
+    font-size: 14px;
+    padding: 4px 10px;
+  }
+
+  .row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    flex-wrap: nowrap;
+    justify-content: center;
+  }
+
+  .key {
+    flex: 0 0 auto;
+    width: 58px;
+    height: 58px;
+    min-width: 58px;
+    border-radius: 9px;
+    border: 2px solid transparent;
+    background: var(--key-bg);
+    color: var(--text);
+    font-size: 20px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    box-shadow: 0 4px 0 var(--key-shadow);
+    transition: all 0.1s ease;
+    position: relative;
+  }
+  .key:active, .key.active {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 var(--key-shadow);
+    border-color: var(--active);
+    color: var(--active);
+    background: #dfe6e9;
+  }
+  .key.flash-ok {
+    background: var(--correct) !important;
+    color: #fff !important;
+    border-color: var(--correct);
+  }
+  .key.flash-bad {
+    background: var(--wrong) !important;
+    color: #fff !important;
+    border-color: var(--wrong);
+  }
+  .key.out-of-range { opacity: 0.4; pointer-events: none; }
+  .key.target-glow {
+    animation: glow 1.2s ease-in-out infinite;
+  }
+  .key.explore-glow {
+    background: #3498db !important;
+    color: #fff !important;
+    border-color: #3498db;
+    box-shadow: 0 4px 0 var(--key-shadow), 0 0 12px 4px rgba(52,152,219,0.5);
+  }
+  @keyframes glow {
+    0%, 100% { box-shadow: 0 4px 0 var(--key-shadow), 0 0 0 0 rgba(52,152,219,0); }
+    50%      { box-shadow: 0 4px 0 var(--key-shadow), 0 0 16px 4px rgba(52,152,219,0.6); }
+  }
+
+  .key.hand-left  { border-left: 4px solid var(--left); }
+  .key.hand-right { border-left: 4px solid var(--right); }
+  .key.hand-thumb { border-left: 4px solid var(--thumb); }
+
+  .key.wide   { width: 86px; }
+  .key.wider  { width: 106px; }
+  .key.widest { width: 156px; }
+
+  .key .sub {
+    position: absolute;
+    top: 5px; left: 6px;
+    font-size: 10px; font-weight: 400; color: var(--muted);
+  }
+  .key.home-row::after {
+    content: "";
+    position: absolute;
+    bottom: 7px;
+    width: 5px; height: 5px;
+    background: var(--muted);
+    border-radius: 50%;
+    opacity: 0.55;
+  }
+
+  /* 控制按鈕（放在練習設定內排成一列） */
+  button {
+    padding: 6px 14px;
+    font-size: 16px;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background: var(--active);
+    color: #fff;
+    box-shadow: 0 3px 0 #1a252f;
+    transition: all 0.15s ease;
+    font-family: inherit;
+  }
+  button:active { transform: translateY(3px); box-shadow: none; }
+  button.secondary { background: #95a5a6; box-shadow: 0 3px 0 #7f8c8d; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.warn { background: #e67e22; box-shadow: 0 3px 0 #d35400; }
+  button.ok-btn { background: var(--correct); box-shadow: 0 3px 0 #1e8449; }
+
+  .footer-note { text-align: center; color: var(--muted); font-size: 14px; margin-top: 20px; }
+
+  @media (max-width: 640px) {
+    .key { width: 46px; height: 46px; min-width: 46px; font-size: 16px; }
+    .key.wide { width: 70px; }
+    .key.wider { width: 88px; }
+    .key.widest { width: 126px; }
+    .row { gap: 7px; margin-bottom: 7px; }
+    #big-letter { font-size: 120px; }
+    .container { padding: 14px; }
+    .display-card { padding: 24px 16px; }
+    #finger-info { font-size: 20px; }
+    #feedback-message { font-size: 22px; }
+    #score-board { font-size: 16px; gap: 16px; }
+    .settings-flex { flex-direction: column; align-items: stretch; }
+    .setting-group label { font-size: 14px; }
+    .mode-btn { font-size: 14px; }
+    select, input[type="text"] { font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>🎹 鍵盤學習 - 字母發音與位置</h1>
+  </header>
+
+  <!-- 練習設定 -->
+  <div class="settings-card">
+    <h3>⚙️ 練習設定</h3>
+    <div class="settings-flex">
+      <div class="setting-group">
+        <label style="font-size:16px;">練習模式：</label>
+        <button type="button" class="mode-btn active" id="pai-explore">👀 自由探索</button>
+        <button type="button" class="mode-btn" id="pai-challenge">🎯 挑戰練習</button>
+      </div>
+
+      <div class="setting-group case-group">
+        <label style="font-size:16px;">字母大小寫：</label>
+        <button type="button" class="mode-btn active" data-case="upper" id="case-upper">🔤 大寫</button>
+        <button type="button" class="mode-btn" data-case="lower" id="case-lower">🔡 小寫</button>
+        <button type="button" class="mode-btn" data-case="mixed">🔤 混合</button>
+      </div>
+
+      <div class="setting-group range-group" style="display:none;">
+        <label style="font-size:18px;">出題範圍：</label>
+        <select id="range-select" style="font-size:18px; padding:4px 8px;">
+          <option value="all">全部字母 A–Z</option>
+          <option value="home">家長鍵位 A S D F J K L ;</option>
+          <option value="left">左手區 (Q W E R A S D F Z X C V)</option>
+          <option value="right">右手區 (Y U I O H J K L N M P ;)</option>
+          <option value="custom">自定義範圍</option>
+        </select>
+      </div>
+
+      <div class="setting-group" id="custom-range" style="display:none;">
+        <label>自定義：</label>
+        <label>從 <input type="text" id="custom-start" value="A" maxlength="1"></label>
+        <label>到 <input type="text" id="custom-end" value="Z" maxlength="1"></label>
+      </div>
+
+      <div class="setting-group timer-group">
+        <label style="font-size:16px;">倒計時：</label>
+        <span id="timer-display" style="font-size:24px;font-weight:bold;color:#e74c3c;">00:00</span>
+      </div>
+
+      <div class="setting-group">
+        <button type="button" id="btn-enable-voice" class="warn">🔈 啟用聲音</button>
+        <button type="button" id="btn-test-sound">🔔 測試聲音</button>
+        <button type="button" id="btn-speak">🔊 重複發音</button>
+        <button type="button" id="btn-next-min" class="ok-btn" style="display:none;">➡️ 開始下一分鐘</button>
+        <button type="button" id="btn-reset" class="secondary">🔄 歸零計分</button>
+      </div>
+    </div>
+    <div class="range-hint" id="range-hint">目前範圍：全部 26 個字母</div>
+  </div>
+
+  <div class="display-card" id="display-card">
+    <p id="big-letter">A</p>
+    <div id="feedback-message" class="neutral">👋 點擊下方按鍵或直接按鍵盤試試</div>
+    <div id="finger-info">左手小指</div>
+    <div id="key-hint">按鍵：<span id="key-label">A</span></div>
+    <div id="score-board">
+      <span class="sc ok">✅ <span id="score-correct">0</span></span>
+      <span class="sc bad">❌ <span id="score-wrong">0</span></span>
+      <span class="sc fire">🔥 連對 <span id="score-streak">0</span></span>
+    </div>
+    <div id="voice-status">⚠️ 請先點擊「啟用聲音」開啟語音功能</div>
+  </div>
+
+  <div class="keyboard">
+    <h2>虛擬鍵盤</h2>
+    <div class="keyboard-case-row">
+      <label style="font-size:14px;color:var(--muted);margin-right:8px;">判斷：</label>
+      <button type="button" class="mode-btn case-btn active" data-sensitive="false">不用區分大小寫</button>
+      <button type="button" class="mode-btn case-btn" data-sensitive="true">區分大小寫</button>
+    </div>
+    <div id="keyboard-body"></div>
+  </div>
+
+  <div class="footer-note">
+    建議練習：先記住 F 與 J 兩個家長鍵位（有凸點），雙手食指置於其上，眼睛看螢幕不要看鍵盤。
+  </div>
+</div>
+
+<script>
+  const FINGER_MAP = {
+    '`':{finger:'左手小指',hand:'left'}, '1':{finger:'左手小指',hand:'left'},
+    'Q':{finger:'左手小指',hand:'left'}, 'A':{finger:'左手小指',hand:'left'},
+    'Z':{finger:'左手小指',hand:'left'}, 'Tab':{finger:'左手小指',hand:'left'},
+    'CapsLock':{finger:'左手小指',hand:'left'}, 'Shift':{finger:'左手小指 / 右手小指',hand:'both'},
+    '2':{finger:'左手無名指',hand:'left'}, 'W':{finger:'左手無名指',hand:'left'},
+    'S':{finger:'左手無名指',hand:'left'}, 'X':{finger:'左手無名指',hand:'left'},
+    '3':{finger:'左手中指',hand:'left'}, 'E':{finger:'左手中指',hand:'left'},
+    'D':{finger:'左手中指',hand:'left'}, 'C':{finger:'左手中指',hand:'left'},
+    '4':{finger:'左手食指',hand:'left'}, '5':{finger:'左手食指',hand:'left'},
+    'R':{finger:'左手食指',hand:'left'}, 'T':{finger:'左手食指',hand:'left'},
+    'F':{finger:'左手食指',hand:'left'}, 'G':{finger:'左手食指',hand:'left'},
+    'V':{finger:'左手食指',hand:'left'}, 'B':{finger:'左手食指',hand:'left'},
+    '6':{finger:'右手食指',hand:'right'}, '7':{finger:'右手食指',hand:'right'},
+    'Y':{finger:'右手食指',hand:'right'}, 'U':{finger:'右手食指',hand:'right'},
+    'H':{finger:'右手食指',hand:'right'}, 'J':{finger:'右手食指',hand:'right'},
+    'N':{finger:'右手食指',hand:'right'}, 'M':{finger:'右手食指',hand:'right'},
+    '8':{finger:'右手中指',hand:'right'}, '9':{finger:'右手中指',hand:'right'},
+    'I':{finger:'右手中指',hand:'right'}, 'K':{finger:'右手中指',hand:'right'},
+    ',':{finger:'右手中指',hand:'right'},
+    '0':{finger:'右手無名指',hand:'right'}, 'O':{finger:'右手無名指',hand:'right'},
+    'L':{finger:'右手無名指',hand:'right'}, '.':{finger:'右手無名指',hand:'right'},
+    'P':{finger:'右手小指',hand:'right'}, ';':{finger:'右手小指',hand:'right'},
+    "'":{finger:'右手小指',hand:'right'}, '/':{finger:'右手小指',hand:'right'},
+    '[':{finger:'右手小指',hand:'right'}, ']':{finger:'右手小指',hand:'right'},
+    '\\':{finger:'右手小指',hand:'right'}, 'Enter':{finger:'右手小指',hand:'right'},
+    'Backspace':{finger:'右手小指',hand:'right'},
+    ' ':{finger:'拇指（空格鍵）',hand:'thumb'},
+  };
+
+  const KEYBOARD_LAYOUT = [
+    [
+      {label:'`',key:'`'},{label:'1',key:'1'},{label:'2',key:'2'},{label:'3',key:'3'},
+      {label:'4',key:'4'},{label:'5',key:'5'},{label:'6',key:'6'},{label:'7',key:'7'},
+      {label:'8',key:'8'},{label:'9',key:'9'},{label:'0',key:'0'},{label:'-',key:'-'},
+      {label:'=',key:'='},{label:'⌫',key:'Backspace',wide:true}
+    ],
+    [
+      {label:'Tab',key:'Tab',wide:true},{label:'Q',key:'Q'},{label:'W',key:'W'},
+      {label:'E',key:'E'},{label:'R',key:'R'},{label:'T',key:'T'},{label:'Y',key:'Y'},
+      {label:'U',key:'U'},{label:'I',key:'I'},{label:'O',key:'O'},{label:'P',key:'P'},
+      {label:'[',key:'['},{label:']',key:']'},{label:'\\',key:'\\'}
+    ],
+    [
+      {label:'Caps',key:'CapsLock',wide:true},{label:'A',key:'A'},{label:'S',key:'S'},
+      {label:'D',key:'D'},{label:'F',key:'F'},{label:'G',key:'G'},{label:'H',key:'H'},
+      {label:'J',key:'J'},{label:'K',key:'K'},{label:'L',key:'L'},{label:';',key:';'},
+      {label:"'",key:"'"},{label:'Enter',key:'Enter',wider:true}
+    ],
+    [
+      {label:'Shift',key:'Shift',wider:true},{label:'Z',key:'Z'},{label:'X',key:'X'},
+      {label:'C',key:'C'},{label:'V',key:'V'},{label:'B',key:'B'},{label:'N',key:'N'},
+      {label:'M',key:'M'},{label:',',key:','},{label:'.',key:'.'},{label:'/',key:'/'},
+      {label:'Shift',key:'Shift',wider:true}
+    ],
+    [
+      {label:'Ctrl',key:'Control'},{label:'Win',key:'Meta'},{label:'Alt',key:'Alt'},
+      {label:'Space',key:' ',widest:true},{label:'Alt',key:'Alt'},
+      {label:'Win',key:'Meta'},{label:'Ctrl',key:'Control'}
+    ]
+  ];
+
+  /* ===== 狀態 ===== */
+  let displayNameCase = 'upper';   // 顯示大小寫
+  let currentRange = 'all';
+  let customStart = 'A';
+  let customEnd = 'Z';
+  let allowedLetters = new Set();
+  let challengeMode = false;
+  let currentTarget = null;        // 挑戰模式：目標字母
+  let scoreCorrect = 0;
+  let scoreWrong = 0;
+  let streak = 0;
+
+  const $big = document.getElementById('big-letter');
+  const $feedback = document.getElementById('feedback-message');
+  const $finger = document.getElementById('finger-info');
+  const $keyLabel = document.getElementById('key-label');
+  const $displayCard = document.getElementById('display-card');
+  const $kb = document.getElementById('keyboard-body');
+  const $btnEnable = document.getElementById('btn-enable-voice');
+  const $btnTest = document.getElementById('btn-test-sound');
+  const $btnSpeak = document.getElementById('btn-speak');
+  const $btnNextMin = document.getElementById('btn-next-min');
+  const $btnReset = document.getElementById('btn-reset');
+  const $voiceStatus = document.getElementById('voice-status');
+  const $rangeSelect = document.getElementById('range-select');
+  const $customRow = document.getElementById('custom-range');
+  const $rangeHint = document.getElementById('range-hint');
+  const $customStart = document.getElementById('custom-start');
+  const $customEnd = document.getElementById('custom-end');
+  const $scoreCorrect = document.getElementById('score-correct');
+  const $scoreWrong = document.getElementById('score-wrong');
+  const $scoreStreak = document.getElementById('score-streak');
+  const $timerDisplay = document.getElementById('timer-display');
+
+  let voiceEnabled = false;
+  let voicesReady = false;
+  let availableVoices = [];
+  let currentUtterance = null;
+
+  /* 大小寫判斷模式：false=不用區分（預設），true=區分大小寫 */
+  let caseSensitive = false;
+  /* 顯示大小寫模式：upper=大寫, lower=小寫, mixed=混合 */
+  let displayCase = 'upper';
+
+  /* 每分鐘測驗狀態 */
+  let timeLeft = 60;
+  let timerInterval = null;
+  let quizActive = false;
+
+  const audioCtx = (() => {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    try { return Ctx ? new Ctx() : null; } catch(e) { return null; }
+  })();
+
+  /* ===== 音效 ===== */
+  function playTone(freq, duration = 0.15, type = 'sine', delay = 0, volume = 0.1) {
+    if (!audioCtx) return;
+    try {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const t0 = audioCtx.currentTime + delay;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, t0);
+      gain.gain.setValueAtTime(volume, t0);
+      gain.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(t0);
+      osc.stop(t0 + duration);
+    } catch (e) {}
+  }
+  function soundCorrect() {
+    playTone(523, 0.12, 'sine', 0, 0.12);   // C
+    playTone(659, 0.12, 'sine', 0.10, 0.12); // E
+    playTone(784, 0.20, 'sine', 0.20, 0.12); // G
+  }
+  function soundWrong() {
+    playTone(220, 0.18, 'square', 0, 0.08);
+    playTone(180, 0.25, 'square', 0.15, 0.08);
+  }
+
+  /* ===== 語音 ===== */
+  function initVoice() {
+    if (!window.speechSynthesis) {
+      $voiceStatus.textContent = '⚠️ 此瀏覽器不支援語音合成，請改用 Chrome 或 Edge';
+      $voiceStatus.style.color = '#c0392b';
+      $btnEnable.disabled = true;
+      $btnSpeak.disabled = true;
+      return;
+    }
+    const loadVoices = () => {
+      availableVoices = window.speechSynthesis.getVoices();
+      if (availableVoices.length > 0) {
+        voicesReady = true;
+        const enVoice = availableVoices.find(v => v.lang.startsWith('en'));
+        $voiceStatus.textContent = enVoice
+          ? '✅ 語音已啟用（' + enVoice.name + '）'
+          : '✅ 語音已啟用（' + availableVoices.length + ' 個語音）';
+        $voiceStatus.style.color = '#27ae60';
+      }
+    };
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+    loadVoices();
+
+    voiceEnabled = true;
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    $btnEnable.textContent = '✅ 聲音已啟用';
+    $btnEnable.classList.remove('warn');
+    $btnEnable.disabled = true;
+    $btnSpeak.disabled = false;
+
+    if (!voicesReady) {
+      $voiceStatus.textContent = '⏳ 正在載入語音…請再按一次字母';
+      $voiceStatus.style.color = '#e67e22';
+    }
+    playTone(600, 0.15);
+    setTimeout(() => speakText('A'), 200);
+  }
+
+  function speakText(text) {
+    if (!voiceEnabled || !window.speechSynthesis) return;
+    try {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'en-US';
+      u.rate = 0.9;
+      u.volume = 1;
+      if (voicesReady && availableVoices.length > 0) {
+        const v = availableVoices.find(v => v.lang === 'en-US')
+               || availableVoices.find(v => v.lang.startsWith('en'));
+        if (v) u.voice = v;
+      }
+      u.onerror = (e) => {
+        if (e.error && e.error !== 'interrupted' && e.error !== 'canceled') {
+          $voiceStatus.textContent = '⚠️ 語音錯誤：' + e.error;
+          $voiceStatus.style.color = '#c0392b';
+        }
+      };
+      currentUtterance = u;
+      window.speechSynthesis.speak(u);
+    } catch (err) {
+      $voiceStatus.textContent = '⚠️ 語音啟動失敗：' + err.message;
+      $voiceStatus.style.color = '#c0392b';
+    }
+  }
+
+  /* ===== 範圍與顯示 ===== */
+  function computeAllowedLetters() {
+    allowedLetters = new Set();
+    const base = [];
+    if (currentRange === 'all') {
+      for (let i = 0; i < 26; i++) base.push(String.fromCharCode(65 + i));
+    } else if (currentRange === 'home') {
+      base.push('A','S','D','F','J','K','L',';');
+    } else if (currentRange === 'left') {
+      base.push('Q','W','E','R','A','S','D','F','Z','X','C','V');
+    } else if (currentRange === 'right') {
+      base.push('Y','U','I','O','P','H','J','K','L','N','M',';');
+    } else if (currentRange === 'custom') {
+      const s = (customStart || 'A').toUpperCase().charCodeAt(0);
+      const e = (customEnd || 'Z').toUpperCase().charCodeAt(0);
+      for (let c = Math.min(s, e); c <= Math.max(s, e); c++) {
+        const ch = String.fromCharCode(c);
+        if (ch >= 'A' && ch <= 'Z') base.push(ch);
+      }
+    }
+    if (caseSensitive) {
+      base.forEach(ch => { allowedLetters.add(ch); if (ch >= 'A' && ch <= 'Z') allowedLetters.add(ch.toLowerCase()); });
+    } else {
+      base.forEach(ch => allowedLetters.add(ch));
+    }
+    updateRangeHint();
+  }
+
+  function updateRangeHint() {
+    let text;
+    if (currentRange === 'custom') {
+      text = `目前範圍：${customStart.toUpperCase()} → ${customEnd.toUpperCase()}（${allowedLetters.size} 個字母）`;
+    } else {
+      const names = { all:'全部 26 個字母', home:'家長鍵位 8 個鍵', left:'左手區 12 個鍵', right:'右手區 12 個鍵' };
+      text = `目前範圍：${names[currentRange]}`;
+    }
+    $rangeHint.textContent = text + (challengeMode ? '｜🎯 挑戰練習中' : '');
+  }
+
+  function displayChar(upperKey) {
+    if (displayCase === 'lower') return upperKey.toLowerCase();
+    if (displayCase === 'mixed') {
+      // 混合模式：隨機大寫或小寫
+      return Math.random() < 0.5 ? upperKey : upperKey.toLowerCase();
+    }
+    return upperKey; // upper
+  }
+
+  /* ===== 鍵盤建立 ===== */
+  function buildKeyboard() {
+    KEYBOARD_LAYOUT.forEach(row => {
+      const rowEl = document.createElement('div');
+      rowEl.className = 'row';
+      row.forEach(k => {
+        const keyEl = document.createElement('div');
+        keyEl.className = 'key' + (k.wide ? ' wide' : '') + (k.wider ? ' wider' : '') + (k.widest ? ' widest' : '');
+        keyEl.dataset.key = k.key;
+        const isLetter = /^[A-Z]$/.test(k.key);
+        keyEl.textContent = isLetter ? displayChar(k.key) : k.label;
+        if (k.label.length === 1 && k.label !== k.key) {
+          const sub = document.createElement('span');
+          sub.className = 'sub';
+          sub.textContent = k.key;
+          keyEl.appendChild(sub);
+        }
+        keyEl.addEventListener('click', () => activateKey(k.key));
+        rowEl.appendChild(keyEl);
+      });
+      $kb.appendChild(rowEl);
+    });
+    document.querySelectorAll('.key').forEach(el => {
+      if (el.dataset.key === 'F' || el.dataset.key === 'J') el.classList.add('home-row');
+    });
+    updateKeyRangeStates();
+  }
+
+  function updateKeyRangeStates() {
+    document.querySelectorAll('.key').forEach(el => {
+      const key = el.dataset.key;
+      if (/^[A-Z]$/.test(key) && !allowedLetters.has(key)) {
+        el.classList.add('out-of-range');
+      } else {
+        el.classList.remove('out-of-range');
+      }
+    });
+  }
+
+  function getFingerInfo(key) {
+    // 優先精確匹配，否則轉大寫查找（供不區分大小寫模式）
+    return FINGER_MAP[key] || FINGER_MAP[key.toUpperCase()] || { finger: '－', hand: '' };
+  }
+
+  function setFeedback(msg, cls) {
+    $feedback.textContent = msg;
+    $feedback.className = cls || 'neutral';
+  }
+
+  function flashCard(cls, ms) {
+    $displayCard.classList.remove('flash-correct', 'flash-wrong');
+    if (cls) {
+      $displayCard.classList.add(cls);
+      setTimeout(() => $displayCard.classList.remove(cls), ms || 500);
+    }
+  }
+
+  function flashKey(key, cls) {
+    const el = document.querySelector(`.key[data-key="${CSS.escape(key)}"]`);
+    if (!el) return;
+    el.classList.add(cls);
+    setTimeout(() => el.classList.remove(cls), 500);
+  }
+
+  function updateScore() {
+    $scoreCorrect.textContent = scoreCorrect;
+    $scoreWrong.textContent = scoreWrong;
+    $scoreStreak.textContent = streak;
+  }
+
+  /* ===== 挑戰練習 ===== */
+  function nextQuestion() {
+    const pool = [...allowedLetters];
+    if (pool.length === 0) return;
+    currentTarget = pool[Math.floor(Math.random() * pool.length)];
+
+    $big.textContent = displayChar(currentTarget);
+    setFeedback('🎯 請按：' + displayChar(currentTarget) + '（鍵盤會發亮）', 'neutral');
+    $finger.textContent = getFingerInfo(currentTarget).finger + '（提示）';
+    $keyLabel.textContent = currentTarget;
+
+    // 讓目標鍵發亮協助初學者，可視練習深度關閉
+    clearGlow();
+    const el = document.querySelector(`.key[data-key="${CSS.escape(currentTarget)}"]`);
+    if (el) el.classList.add('target-glow');
+
+    if (voiceEnabled) speakText(currentTarget);
+  }
+
+  function clearGlow() {
+    document.querySelectorAll('.key.target-glow').forEach(el => el.classList.remove('target-glow'));
+  }
+
+  function checkAnswer(pressedKey) {
+    // 忽略修飾鍵
+    if (['Shift','Control','Alt','Meta','Tab','CapsLock'].includes(pressedKey)) return;
+
+    if (!allowedLetters.has(pressedKey)) {
+      // 範圍外：輕提示，不計分
+      playTone(300, 0.1, 'square', 0, 0.06);
+      setFeedback('⚠️ 這個鍵不在練習範圍內', 'neutral');
+      flashKey(pressedKey, 'flash-bad');
+      return;
+    }
+
+    if (pressedKey === currentTarget) {
+      // ===== 答對 =====
+      scoreCorrect++;
+      streak++;
+      updateScore();
+      soundCorrect();
+      setFeedback('✅ 答對了！就是「' + displayChar(pressedKey) + '」', 'ok');
+      flashCard('flash-correct', 500);
+      flashKey(pressedKey, 'flash-ok');
+      $finger.textContent = getFingerInfo(pressedKey).finger;
+      $keyLabel.textContent = pressedKey;
+      if (voiceEnabled) speakText('Correct');
+      setTimeout(nextQuestion, 900);   // 稍候自動出下一題
+    } else {
+      // ===== 答錯 =====
+      scoreWrong++;
+      streak = 0;
+      updateScore();
+      soundWrong();
+      const info = getFingerInfo(currentTarget);
+      setFeedback('❌ 錯了！你按了「' + displayChar(pressedKey) + '」，請找「' + displayChar(currentTarget) + '」', 'bad');
+      flashCard('flash-wrong', 500);
+      flashKey(pressedKey, 'flash-bad');
+      $finger.textContent = info.finger + '（提示：用' + info.finger.replace(/（|）/g, '') + '）';
+      if (voiceEnabled) speakText('Try again');
+      // 同一題繼續，讓學生再試
+    }
+  }
+
+  /* ===== 自由探索 ===== */
+  let exploreTarget = null;
+
+  function nextExploreTarget() {
+    const pool = [...allowedLetters];
+    if (pool.length === 0) return;
+    exploreTarget = pool[Math.floor(Math.random() * pool.length)];
+
+    $big.textContent = displayChar(exploreTarget);
+    setFeedback('🔍 請按鍵盤：' + displayChar(exploreTarget), 'neutral');
+    $finger.textContent = getFingerInfo(exploreTarget).finger;
+    $keyLabel.textContent = exploreTarget;
+    $finger.style.color = getFingerInfo(exploreTarget).hand === 'left' ? 'var(--left)'
+                        : getFingerInfo(exploreTarget).hand === 'right' ? 'var(--right)' : 'var(--thumb)';
+
+    clearExploreGlow();
+    const el = document.querySelector(`.key[data-key="${CSS.escape(exploreTarget)}"]`);
+    if (el) el.classList.add('explore-glow');
+
+    if (voiceEnabled) speakText(exploreTarget);
+  }
+
+  function clearExploreGlow() {
+    document.querySelectorAll('.key.explore-glow').forEach(el => el.classList.remove('explore-glow'));
+  }
+
+  function exploreKey(pressedKey) {
+    const info = getFingerInfo(pressedKey);
+
+    // 若有設定探索目標，檢查是否按對
+    if (exploreTarget) {
+      const match = caseSensitive ? pressedKey === exploreTarget : pressedKey.toUpperCase() === exploreTarget;
+      if (match) {
+        // 按對了：亮光回饋 + 發音 + 自動換下一個
+        soundCorrect();
+        flashCard('flash-correct', 400);
+        flashKey(pressedKey, 'flash-ok');
+        setFeedback('✅ 對了！「' + displayChar(exploreTarget) + '」', 'ok');
+        clearExploreGlow();
+        setTimeout(nextExploreTarget, 700);
+        return;
+      } else {
+        // 按錯了：短暫紅光，不換題
+        soundWrong();
+        flashCard('flash-wrong', 300);
+        flashKey(pressedKey, 'flash-bad');
+        setFeedback('❌ 再試一次，請找「' + displayChar(exploreTarget) + '」', 'bad');
+        if (voiceEnabled) speakText('Try again');
+        return;
+      }
+    }
+
+    // 沒有探索目標時：單純顯示按下的鍵
+    $big.textContent = displayChar(pressedKey);
+    $finger.textContent = info.finger;
+    $keyLabel.textContent = pressedKey;
+    $finger.style.color = info.hand === 'left' ? 'var(--left)'
+                        : info.hand === 'right' ? 'var(--right)' : 'var(--thumb)';
+
+    const speakable = /^[A-Z0-9]$/.test(pressedKey);
+    if (speakable) {
+      speakText(pressedKey);
+      setFeedback('🔊 ' + displayChar(pressedKey), 'neutral');
+    } else {
+      playTone(400, 0.12, 'sine', 0, 0.08);
+    }
+  }
+
+  /* ===== 統一入口 ===== */
+  function activateKey(rawKey) {
+    // 大小寫正規化：區分大小寫模式下不轉換，否則統一大寫
+    let key = rawKey;
+    if (!caseSensitive && typeof key === 'string' && key.length === 1) key = key.toUpperCase();
+
+    let normKey = key;
+    if (key === 'ShiftLeft' || key === 'ShiftRight') normKey = 'Shift';
+    if (key === 'ControlLeft' || key === 'ControlRight') normKey = 'Control';
+    if (key === 'AltLeft' || key === 'AltRight') normKey = 'Alt';
+    if (key === 'WinLeft' || key === 'WinRight') normKey = 'Meta';
+
+    // 高亮：虛擬鍵盤 data-key 皆為大寫，統一用大寫查找
+    const highlightKeyName = (!caseSensitive && typeof key === 'string' && key.length === 1) ? key.toUpperCase() : normKey;
+    highlightKey(highlightKeyName);
+    if (!challengeMode) exploreKey(normKey);
+  }
+
+  function highlightKey(key) {
+    document.querySelectorAll('.key.active').forEach(el => el.classList.remove('active'));
+    const target = document.querySelector(`.key[data-key="${CSS.escape(key)}"]`);
+    if (target) {
+      target.classList.add('active');
+      setTimeout(() => target.classList.remove('active'), 200);
+    }
+  }
+
+  /* ===== 事件 ===== */
+  /* ===== 以實體鍵盤位置判斷（不受大小寫、輸入法影響） ===== */
+  const CODE_MAP = {
+    Backquote:'`', Minus:'-', Equal:'=',
+    Digit0:'0', Digit1:'1', Digit2:'2', Digit3:'3', Digit4:'4',
+    Digit5:'5', Digit6:'6', Digit7:'7', Digit8:'8', Digit9:'9',
+    KeyQ:'Q', KeyW:'W', KeyE:'E', KeyR:'R', KeyT:'T', KeyY:'Y',
+    KeyU:'U', KeyI:'I', KeyO:'O', KeyP:'P',
+    KeyA:'A', KeyS:'S', KeyD:'D', KeyF:'F', KeyG:'G', KeyH:'H',
+    KeyJ:'J', KeyK:'K', KeyL:'L',
+    Semicolon:';', Quote:"'", Backslash:'\\',
+    KeyZ:'Z', KeyX:'X', KeyC:'C', KeyV:'V', KeyB:'B',
+    KeyN:'N', KeyM:'M', Comma:',', Period:'.', Slash:'/',
+    Space:' ', Enter:'Enter', Backspace:'Backspace',
+    Tab:'Tab', CapsLock:'CapsLock',
+    ShiftLeft:'Shift', ShiftRight:'Shift',
+    ControlLeft:'Control', ControlRight:'Control',
+    AltLeft:'Alt', AltRight:'Alt',
+    MetaLeft:'Meta', MetaRight:'Meta'
+  };
+
+  function keyFromEvent(e) {
+    // 優先用實體鍵盤位置（e.code），位置對就答對，與大小寫無關
+    if (e.code && CODE_MAP[e.code]) return CODE_MAP[e.code];
+    // 備援：用 e.key
+    let k = e.key;
+    if (typeof k === 'string' && k.length === 1) k = k.toUpperCase();
+    if (k === 'ShiftLeft' || k === 'ShiftRight') k = 'Shift';
+    if (k === 'ControlLeft' || k === 'ControlRight') k = 'Control';
+    if (k === 'AltLeft' || k === 'AltRight') k = 'Alt';
+    return k;
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
+    
+    // 決定使用哪個按鍵值：區分大小寫時用 e.key，否則用實體位置 e.code
+    let key;
+    if (caseSensitive) {
+      key = e.key;
+      if (typeof key === 'string' && key.length === 1) key = key; // 保留原始大小寫
+    } else {
+      key = keyFromEvent(e);
+    }
+    
+    activateKey(key);
+    if (challengeMode && !quizActive && e.code === 'Space') {
+      e.preventDefault();
+      startQuizMinute();
+      return;
+    }
+    if (challengeMode && quizActive) checkAnswer(key);
+  });
+
+  document.addEventListener('keyup', () => {});
+
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.id.startsWith('pai-')) {
+        document.getElementById('pai-explore').classList.remove('active');
+        document.getElementById('pai-challenge').classList.remove('active');
+        btn.classList.add('active');
+        challengeMode = (btn.id === 'pai-challenge');
+        stopQuizTimer();
+        quizActive = false;
+        timeLeft = 60;
+        updateTimerDisplay();
+        if (challengeMode) {
+          setFeedback('🎯 挑戰練習：請按【空白鍵】開始每分鐘測驗', 'neutral');
+          $btnNextMin.style.display = 'none';
+          clearGlow();
+          clearExploreGlow();
+          currentTarget = null;
+          exploreTarget = null;
+          $big.textContent = displayChar('A');
+        } else {
+          clearGlow();
+          clearExploreGlow();
+          currentTarget = null;
+          exploreTarget = null;
+          setFeedback('👀 自由探索：請按鍵盤上的任意鍵', 'neutral');
+          $big.textContent = displayChar('A');
+          $btnNextMin.style.display = 'none';
+          nextExploreTarget();  // 自由探索開始時先亮一個鍵
+        }
+        updateRangeHint();
+      } else {
+        // 第二區「字母大小寫」顯示模式按鈕
+        if (btn.dataset.case !== undefined) {
+          document.getElementById('case-upper').classList.remove('active');
+          document.getElementById('case-lower').classList.remove('active');
+          // 也處理混合按鈕（若存在）
+          document.querySelectorAll('.case-group .mode-btn[data-case]').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          displayCase = btn.dataset.case;
+          // 重新顯示所有鍵盤按鈕
+          document.querySelectorAll('.key').forEach(el => {
+            const k = el.dataset.key;
+            if (/^[A-Z]$/.test(k)) el.textContent = displayChar(k);
+          });
+          if (challengeMode && currentTarget) {
+            $big.textContent = displayChar(currentTarget);
+          } else if (!challengeMode) {
+            $big.textContent = displayChar('A');
+          }
+        }
+      }
+    });
+  });
+
+  /* 虛擬鍵盤區域的大小寫判斷切換 */
+  document.querySelectorAll('.keyboard-case-row .case-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.querySelectorAll('.keyboard-case-row .case-btn[data-sensitive]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      caseSensitive = (btn.dataset.sensitive === 'true');
+    });
+  });
+
+  $rangeSelect.addEventListener('change', () => {
+    currentRange = $rangeSelect.value;
+    $customRow.style.display = currentRange === 'custom' ? 'flex' : 'none';
+    if (currentRange === 'custom') {
+      customStart = $customStart.value || 'A';
+      customEnd = $customEnd.value || 'Z';
+    }
+    computeAllowedLetters();
+    updateKeyRangeStates();
+    if (challengeMode) nextQuestion();
+  });
+
+  $customStart.addEventListener('input', () => {
+    customStart = $customStart.value || 'A';
+    computeAllowedLetters();
+    updateKeyRangeStates();
+    if (challengeMode) nextQuestion();
+  });
+  $customEnd.addEventListener('input', () => {
+    customEnd = $customEnd.value || 'Z';
+    computeAllowedLetters();
+    updateKeyRangeStates();
+    if (challengeMode) nextQuestion();
+  });
+
+  $btnEnable.addEventListener('click', initVoice);
+  $btnTest.addEventListener('click', () => {
+    playTone(800, 0.2, 'sine', 0, 0.12);
+    if (voiceEnabled) speakText('test');
+  });
+  $btnSpeak.addEventListener('click', () => {
+    if (challengeMode && currentTarget) speakText(currentTarget);
+    else if ($keyLabel.textContent) speakText($keyLabel.textContent);
+  });
+  $btnNextMin.addEventListener('click', () => {
+    if (!challengeMode) return;
+    startQuizMinute();
+  });
+  $btnReset.addEventListener('click', () => {
+    stopQuizTimer();
+    scoreCorrect = 0; scoreWrong = 0; streak = 0;
+    timeLeft = 60;
+    quizActive = false;
+    updateTimerDisplay();
+    updateScore();
+    $btnNextMin.style.display = 'inline-block';
+    $btnNextMin.textContent = '➡️ 開始下一分鐘';
+    setFeedback('🔄 計分已歸零，準備好就按「開始下一分鐘」', 'neutral');
+    clearGlow();
+    currentTarget = null;
+    $big.textContent = displayChar('A');
+  });
+
+  /* ===== 每分鐘測驗邏輯 ===== */
+  function startQuizMinute() {
+    if (quizActive) return;
+    quizActive = true;
+    timeLeft = 60;
+    updateTimerDisplay();
+    $btnNextMin.style.display = 'none';
+    nextQuestion();
+
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      updateTimerDisplay();
+      if (timeLeft <= 0) {
+        stopQuizTimer();
+        quizActive = false;
+        clearGlow();
+        currentTarget = null;
+        $big.textContent = '⏰';
+        setFeedback('⏱️ 一分鐘到！成績：' + scoreCorrect + ' 正確 / ' + scoreWrong + ' 錯誤', 'neutral');
+        $btnNextMin.style.display = 'inline-block';
+        $btnNextMin.textContent = '➡️ 開始下一分鐘';
+        if (voiceEnabled) speakText('Time is up');
+      }
+    }, 1000);
+  }
+
+  function stopQuizTimer() {
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+  }
+
+  function updateTimerDisplay() {
+    const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+    const s = (timeLeft % 60).toString().padStart(2, '0');
+    $timerDisplay.textContent = m + ':' + s;
+    $timerDisplay.style.color = timeLeft <= 10 ? '#c0392b' : '#e74c3c';
+  }
+
+  /* ===== 初始化 ===== */
+  computeAllowedLetters();
+  buildKeyboard();
+  updateScore();
+  updateTimerDisplay();
+  nextExploreTarget();
+</script>
+
+</body>
+</html>
